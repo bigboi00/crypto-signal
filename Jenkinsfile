@@ -1,40 +1,62 @@
 pipeline {
     agent any
 
-    environment {
-        // Define the Node.js version (use the one installed on Jenkins)
-        NODEJS_VERSION = 'nodejs' // Replace with the NodeJS installation name in Jenkins
+    tools {
+        nodejs 'nodejs' // Ensure this matches the NodeJS tool name configured in Jenkins
     }
 
     stages {
-        stage('Setup Node.js') {
+        stage('Checkout') {
             steps {
-                script {
-                    // Set up Node.js using the Node.js plugin
-                    def nodejs = tool name: "${NODEJS_VERSION}", type: 'NodeJS'
-                    env.PATH = "${nodejs}/bin:${env.PATH}"
-                }
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                // Install Node.js dependencies using npm
                 sh 'npm install'
             }
         }
 
-        stage('Run Server') {
+        stage('Build') {
             steps {
-                // Run the Node.js server
-                sh 'node server.js'
+                sh 'npm run build'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'npm test'
+            }
+        }
+
+        stage('Lint') {
+            steps {
+                sh 'npm run lint'
+            }
+        }
+
+        stage('Package') {
+            steps {
+                sh 'npm run package'
             }
         }
     }
 
     post {
         always {
-            echo 'Pipeline complete.'
+            script {
+                // Wrap workspace cleanup in a node block
+                node {
+                    cleanWs()
+                }
+            }
+        }
+        success {
+            echo 'Build succeeded!'
+        }
+        failure {
+            echo 'Build failed!'
         }
     }
 }
