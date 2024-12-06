@@ -6,7 +6,7 @@ pipeline {
   stages {       
     stage('Install dependencies') {
       steps {
-        sh 'npm i -save express'
+        sh 'npm install express mongoose cors dotenv body-parser'
       }
     }     
     stage('Test') {
