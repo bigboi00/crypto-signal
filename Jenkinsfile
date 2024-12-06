@@ -18,9 +18,6 @@ pipeline {
                 dir('backend') {
                     sh 'npm install'
                 }
-                dir('frontend') {
-                    sh 'npm install'
-                }
             }
         }
 
