@@ -1,14 +1,23 @@
 pipeline {
     agent any
     stages {
-        stage('Build') {
+        stage('checkout') {
             steps {
-                script {
-                    docker.image('node:18').inside {
-                        sh 'node --version'
-                    }
-                }
+                checkout scm
             }
         }
+
+        stage('test'){
+            steps{
+                sh 'sudo npm install'
+                sh 'npm test'
+            }
+        }
+
+        stage('build'){
+            steps{
+                sh 'npm run build'
+            }
+        )
     }
 }
