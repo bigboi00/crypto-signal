@@ -1,79 +1,76 @@
 pipeline {
-    agent any
-
-    environment {
-        NODE_ENV = 'production'
+    agent {
+        // Use Docker as the agent
+        docker {
+            image 'node:18' // Node.js Docker image
+            args '-v /var/run/docker.sock:/var/run/docker.sock' // Mount Docker socket for container builds
+        }
     }
-
+    environment {
+        NODE_ENV = 'production' // Set environment variable
+        BACKEND_DIR = 'backend' // Backend folder name
+    }
     stages {
         stage('Checkout') {
             steps {
-                echo 'Checking out code...'
-                checkout scm
-            }
-        }
-
-        stage('Navigate to Backend') {
-            steps {
-                echo 'Navigating to backend directory...'
-                dir('backend') {
-                    echo 'Now in backend directory.'
+                script {
+                    // Checkout the repository
+                    checkout scm
                 }
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                echo 'Installing npm dependencies...'
-                dir('backend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                echo 'Running ESLint...'
-                dir('backend') {
-                    sh 'npm run lint'
+                script {
+                    dir(env.BACKEND_DIR) {
+                        sh 'npm install' // Install Node.js dependencies
+                    }
                 }
             }
         }
 
         stage('Run Tests') {
             steps {
-                echo 'Running tests...'
-                dir('backend') {
-                    sh 'npm test'
+                script {
+                    dir(env.BACKEND_DIR) {
+                        sh 'npm test' // Run tests (make sure tests are defined in package.json)
+                    }
                 }
             }
         }
 
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo 'Building project (if applicable)...'
-                dir('backend') {
-                    sh 'npm run build'
+                script {
+                    dir(env.BACKEND_DIR) {
+                        sh 'docker build -t backend-app:latest .' // Build the Docker image
+                    }
                 }
             }
         }
 
-        stage('Start Server') {
+        stage('Run Server in Docker') {
             steps {
-                echo 'Starting server...'
-                dir('backend') {
-                    sh 'node server.js'
+                script {
+                    sh 'docker run -d -p 3000:3000 --name backend-app backend-app:latest' // Run the container
                 }
             }
         }
     }
-
     post {
+        always {
+            echo 'Pipeline completed.'
+        }
         success {
-            echo 'Pipeline completed successfully!'
+            echo 'Application deployed successfully!'
         }
         failure {
-            echo 'Pipeline failed. Check the logs for errors.'
+            echo 'Pipeline failed.'
+        }
+        cleanup {
+            // Clean up running Docker containers
+            sh 'docker stop backend-app || true && docker rm backend-app || true'
         }
     }
 }
