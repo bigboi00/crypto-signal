@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // Define the Node.js version (use the one installed on Jenkins)
-        NODEJS_VERSION = 'nodejs-22.11.0' // Replace with the NodeJS installation name in Jenkins
+        NODEJS_VERSION = 'NodeJS Plugin' // Replace with the NodeJS installation name in Jenkins
     }
 
     stages {
