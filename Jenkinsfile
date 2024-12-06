@@ -1,10 +1,13 @@
 pipeline {
     agent any
 
+    tools {
+        nodejs "nodejs" // Match the NodeJS version configured in Jenkins
+    }
+
     stages {
         stage('Checkout Code') {
             steps {
-                // Check out the code from your Git repository
                 checkout scm
             }
         }
@@ -24,7 +27,6 @@ pipeline {
         stage('Build Frontend') {
             steps {
                 dir('frontend') {
-                    // Build the Vue.js frontend
                     sh 'npm run build'
                 }
             }
@@ -33,10 +35,10 @@ pipeline {
         stage('Run Backend and Frontend') {
             steps {
                 script {
-                    // Start backend and frontend servers in parallel
+                    // Define backend and frontend processes
                     def backend = {
                         dir('backend') {
-                            sh 'npm start'
+                            sh 'node server.js'
                         }
                     }
                     def frontend = {
@@ -44,6 +46,7 @@ pipeline {
                             sh 'npm run serve'
                         }
                     }
+                    // Run both in parallel
                     parallel backend: backend, frontend: frontend
                 }
             }
