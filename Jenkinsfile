@@ -1,67 +1,62 @@
 pipeline {
     agent any
 
-    environment {
-        NODEJS_HOME = tool name: 'NodeJS' // Use Node.js version installed in Jenkins
+    tools {
+        nodejs 'NodeJS' // Ensure this matches the NodeJS tool name configured in Jenkins
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                // Pull code from your Git repository
-                git branch: 'main', url: 'https://github.com/bigboi00/crypto-signal.git'
+                checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                script {
-                    // Set up Node.js environment
-                    env.PATH = "${NODEJS_HOME}/bin:${env.PATH}"
-                }
                 sh 'npm install'
             }
         }
 
-        stage('Lint Code') {
+        stage('Build') {
             steps {
-                // Run linting (optional, if you use ESLint or similar tools)
-                sh 'npm run lint || echo "Linting passed!"'
+                sh 'npm run build'
             }
         }
 
-        stage('Run Tests') {
+        stage('Test') {
             steps {
-                // Run any tests you have (if configured in package.json)
-                sh 'npm test || echo "Tests passed!"'
+                sh 'npm test'
             }
         }
 
-        stage('Build and Start App') {
+        stage('Lint') {
             steps {
-                // Start the Node.js server
-                sh 'node server.js &'
+                sh 'npm run lint'
             }
         }
 
-        stage('Save to MongoDB') {
+        stage('Package') {
             steps {
-                // Optionally, test data saving or database connection here
-                sh 'echo "Testing MongoDB connection..."'
+                sh 'npm run package'
             }
         }
     }
 
     post {
         always {
-            // Clean up running processes if needed
-            sh 'pkill -f node || echo "No running Node processes to kill"'
+            script {
+                // Wrap workspace cleanup in a node block
+                node {
+                    cleanWs()
+                }
+            }
         }
         success {
-            echo 'Pipeline executed successfully!'
+            echo 'Build succeeded!'
         }
         failure {
-            echo 'Pipeline failed!'
+            echo 'Build failed!'
         }
     }
 }
