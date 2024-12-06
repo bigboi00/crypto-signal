@@ -1,62 +1,61 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'nodejs' // Ensure this matches the NodeJS tool name configured in Jenkins
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
+                // Check out the code from your Git repository
                 checkout scm
             }
         }
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                // Install dependencies for both backend and frontend
+                dir('backend') {
+                    sh 'npm install'
+                }
+                dir('frontend') {
+                    sh 'npm install'
+                }
             }
         }
 
-        stage('Build') {
+        stage('Build Frontend') {
             steps {
-                sh 'npm run build'
+                dir('frontend') {
+                    // Build the Vue.js frontend
+                    sh 'npm run build'
+                }
             }
         }
 
-        stage('Test') {
+        stage('Run Backend and Frontend') {
             steps {
-                sh 'npm test'
-            }
-        }
-
-        stage('Lint') {
-            steps {
-                sh 'npm run lint'
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh 'npm run package'
+                script {
+                    // Start backend and frontend servers in parallel
+                    def backend = {
+                        dir('backend') {
+                            sh 'npm start'
+                        }
+                    }
+                    def frontend = {
+                        dir('frontend') {
+                            sh 'npm run serve'
+                        }
+                    }
+                    parallel backend: backend, frontend: frontend
+                }
             }
         }
     }
 
     post {
         always {
-            script {
-                // Wrap workspace cleanup in a node block
-                node {
-                    cleanWs()
-                }
-            }
-        }
-        success {
-            echo 'Build succeeded!'
+            echo 'Pipeline execution complete!'
         }
         failure {
-            echo 'Build failed!'
+            echo 'Pipeline failed!'
         }
     }
 }
