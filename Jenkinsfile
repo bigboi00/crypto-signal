@@ -34,13 +34,8 @@ pipeline {
                             sh 'node server.js'
                         }
                     }
-                    def frontend = {
-                        dir('frontend') {
-                            sh 'npm run serve'
-                        }
-                    }
                     // Run both in parallel
-                    parallel backend: backend, frontend: frontend
+                    parallel backend: backend
                 }
             }
         }
