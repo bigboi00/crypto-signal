@@ -3,6 +3,12 @@ pipeline {
 
   tools {nodejs "nodejs"}
 
+    stage('Verify Node and npm') {
+    steps {
+      sh 'node -v && npm -v'
+    }
+  }
+  
   stages {       
     stage('Install dependencies') {
       steps {
