@@ -1,27 +1,64 @@
 pipeline {
     agent any
+
+    tools {
+        nodejs "nodejs" // Match the NodeJS version configured in Jenkins
+    }
+
     stages {
-        stage('Build Docker Image') {
+        stage('Checkout Code') {
             steps {
-                script {
-                    sh 'docker build -t crypto-signal .'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                // Install dependencies for both backend and frontend
+                dir('backend') {
+                    sh 'npm install'
+                }
+                dir('frontend') {
+                    sh 'npm install'
                 }
             }
         }
-        stage('Run Docker Container') {
+
+        stage('Build Frontend') {
             steps {
-                script {
-                    sh 'docker run -d -p 5000:5000 --name crypto-signal-container crypto-signal'
+                dir('frontend') {
+                    sh 'npm run build'
                 }
             }
         }
-        stage('Wait for Service') {
+
+        stage('Run Backend and Frontend') {
             steps {
                 script {
-                    // Wait for the application to respond
-                    sh 'until curl -s http://localhost:5000; do sleep 5; done'
+                    // Define backend and frontend processes
+                    def backend = {
+                        dir('backend') {
+                            sh 'node server.js'
+                        }
+                    }
+                    def frontend = {
+                        dir('frontend') {
+                            sh 'npm run serve'
+                        }
+                    }
+                    // Run both in parallel
+                    parallel backend: backend, frontend: frontend
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution complete!'
+        }
+        failure {
+            echo 'Pipeline failed!'
         }
     }
 }
