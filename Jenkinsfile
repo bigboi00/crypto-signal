@@ -3,13 +3,14 @@ pipeline {
 
   tools {nodejs "nodejs"}
 
-  stages('Verify Node and npm') {
+
+  
+  stages { 
+      stage('Verify Node and npm') {
     steps {
       sh 'node -v && npm -v'
     }
   }
-  
-  stages {       
     stage('Install dependencies') {
       steps {
         sh 'npm install express mongoose cors dotenv body-parser'
