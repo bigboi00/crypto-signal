@@ -24,13 +24,6 @@ pipeline {
             }
         }
 
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm install -g @vue/cli'
-                }
-            }
-        }
 
         stage('Run Backend and Frontend') {
             steps {
