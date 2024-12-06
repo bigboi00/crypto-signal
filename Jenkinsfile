@@ -12,26 +12,6 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
-            steps {
-                // Install dependencies for both backend and frontend
-                dir('backend') {
-                    sh 'npm install'
-                }
-                dir('frontend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                dir('frontend') {
-                    sh 'npm run build'
-                }
-            }
-        }
-
         stage('Run Backend and Frontend') {
             steps {
                 script {
@@ -41,13 +21,9 @@ pipeline {
                             sh 'node server.js'
                         }
                     }
-                    def frontend = {
-                        dir('frontend') {
-                            sh 'npm run serve'
-                        }
-                    }
+                    
                     // Run both in parallel
-                    parallel backend: backend, frontend: frontend
+                    parallel backend: backend
                 }
             }
         }
