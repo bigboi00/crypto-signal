@@ -1,49 +1,27 @@
 pipeline {
     agent any
-
-    tools {
-        nodejs "nodejs" // Match the NodeJS version configured in Jenkins
-    }
-
     stages {
-        stage('Checkout Code') {
-            steps {
-                checkout scm
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                // Install dependencies for both backend and frontend
-                dir('backend') {
-                    sh 'npm install'
-                }
-            }
-        }
-
-
-        stage('Run Backend and Frontend') {
+        stage('Build Docker Image') {
             steps {
                 script {
-                    // Define backend and frontend processes
-                    def backend = {
-                        dir('backend') {
-                            sh 'node server.js'
-                        }
-                    }
-                    // Run both in parallel
-                    parallel backend: backend
+                    sh 'docker build -t crypto-signal .'
                 }
             }
         }
-    }
-
-    post {
-        always {
-            echo 'Pipeline execution complete!'
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    sh 'docker run -d -p 5000:5000 --name crypto-signal-container crypto-signal'
+                }
+            }
         }
-        failure {
-            echo 'Pipeline failed!'
+        stage('Wait for Service') {
+            steps {
+                script {
+                    // Wait for the application to respond
+                    sh 'until curl -s http://localhost:5000; do sleep 5; done'
+                }
+            }
         }
     }
 }
